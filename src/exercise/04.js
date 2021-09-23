@@ -4,43 +4,76 @@
 import * as React from 'react'
 import {useLocalStorageState} from '../utils'
 
-const initialValues = Array(9).fill(null)
+const initialValues = [Array(9).fill(null)]
 
-function Board() {
-  const [squares, setSquares] = useLocalStorageState('game', initialValues)
+function Game() {
+  const [history, setHistory] = useLocalStorageState('history', initialValues)
+  const [currentStep, setCurrentStep] = useLocalStorageState('step', 0)
 
-  const nextValue = calculateNextValue(squares)
-  const winner = calculateWinner(squares)
-  const status = calculateStatus(winner, squares, nextValue)
+  const nextValue = calculateNextValue(history[currentStep])
+  const winner = calculateWinner(history[currentStep])
+  const status = calculateStatus(winner, history[currentStep], nextValue)
 
   function selectSquare(square) {
-    if (winner || squares[square]) {
+    if (winner || history[currentStep][square]) {
       return
     }
-    const squaresCopy = [...squares]
+    const newHistory = history.slice(0, currentStep + 1)
+    const squaresCopy = [...history[currentStep]]
     squaresCopy[square] = nextValue
-    setSquares(squaresCopy)
+    setHistory([...newHistory, [...squaresCopy]])
+    setCurrentStep(newHistory.length)
   }
 
   function restart() {
-    setSquares(initialValues)
+    setHistory(initialValues)
+    setCurrentStep(0)
   }
+  return (
+    <div className="game">
+      <div className="game-board">
+        <Board
+          selectSquare={selectSquare}
+          currentSquares={history[currentStep]}
+        />
+        <button className="restart" onClick={restart}>
+          restart
+        </button>
+      </div>
+      <div className="game-info">
+        <div>{status}</div>
+        <ol>
+          {history.map((move, i) => {
+            let btnText = i === 0 ? 'Go to game start' : `Go to move #${i}`
+            const isItCurrent = i === currentStep
+            btnText += isItCurrent ? '(current)' : ''
+            return (
+              <li key={JSON.stringify(move)}>
+                <button
+                  disabled={isItCurrent}
+                  onClick={() => setCurrentStep(i)}
+                >
+                  {btnText}
+                </button>
+              </li>
+            )
+          })}
+        </ol>
+      </div>
+    </div>
+  )
+}
 
+function Board({selectSquare, currentSquares}) {
   function renderSquare(i) {
     return (
       <button className="square" onClick={() => selectSquare(i)}>
-        {squares[i]}
+        {currentSquares[i]}
       </button>
     )
   }
-
-  React.useEffect(() => {
-    window.localStorage.setItem('game', JSON.stringify(squares))
-  }, [squares])
-
   return (
     <div>
-      <div className="status">{status}</div>
       <div className="board-row">
         {renderSquare(0)}
         {renderSquare(1)}
@@ -55,19 +88,6 @@ function Board() {
         {renderSquare(6)}
         {renderSquare(7)}
         {renderSquare(8)}
-      </div>
-      <button className="restart" onClick={restart}>
-        restart
-      </button>
-    </div>
-  )
-}
-
-function Game() {
-  return (
-    <div className="game">
-      <div className="game-board">
-        <Board />
       </div>
     </div>
   )
