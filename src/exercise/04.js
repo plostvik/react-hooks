@@ -6,7 +6,9 @@ import * as React from 'react'
 const initialValues = Array(9).fill(null)
 
 function Board() {
-  const [squares, setSquares] = React.useState(initialValues)
+  const [squares, setSquares] = React.useState(
+    () => JSON.parse(window.localStorage.getItem('game')) || initialValues,
+  )
   const nextValue = calculateNextValue(squares)
   const winner = calculateWinner(squares)
   const status = calculateStatus(winner, squares, nextValue)
@@ -31,6 +33,10 @@ function Board() {
       </button>
     )
   }
+
+  React.useEffect(() => {
+    window.localStorage.setItem('game', JSON.stringify(squares))
+  }, [squares])
 
   return (
     <div>
