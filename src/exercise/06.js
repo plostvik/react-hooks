@@ -16,10 +16,15 @@ const statusEnum = {
   rejected: 'rejected',
 }
 
+const initialState = {
+  pokemon: null,
+  error: null,
+  status: statusEnum.idle,
+}
+
 function PokemonInfo({pokemonName}) {
-  const [pokemon, setPokemon] = React.useState(null)
-  const [error, setError] = React.useState(null)
-  const [status, setStatus] = React.useState(statusEnum.idle)
+  const [pokemonState, setPokemonState] = React.useState(initialState)
+  const {status, error, pokemon} = pokemonState
 
   React.useEffect(() => {
     if (!pokemonName) {
@@ -29,14 +34,20 @@ function PokemonInfo({pokemonName}) {
     applyPokeData()
 
     async function applyPokeData() {
-      setStatus(statusEnum.pending)
+      setPokemonState(prevState => ({...prevState, status: statusEnum.pending}))
       try {
         const data = await fetchPokemon(pokemonName)
-        setPokemon(data)
-        setStatus(statusEnum.resolved)
+        setPokemonState(prevState => ({
+          ...prevState,
+          status: statusEnum.resolved,
+          pokemon: data,
+        }))
       } catch (error) {
-        setError(error)
-        setStatus(statusEnum.rejected)
+        setPokemonState(prevState => ({
+          ...prevState,
+          error,
+          status: statusEnum.rejected,
+        }))
       }
     }
   }, [pokemonName])
