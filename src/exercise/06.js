@@ -9,9 +9,17 @@ import {
   PokemonDataView,
 } from '../pokemon'
 
+const statusEnum = {
+  idle: 'idle',
+  pending: 'pending',
+  resolved: 'resolved',
+  rejected: 'rejected',
+}
+
 function PokemonInfo({pokemonName}) {
   const [pokemon, setPokemon] = React.useState(null)
   const [error, setError] = React.useState(null)
+  const [status, setStatus] = React.useState(statusEnum.idle)
 
   React.useEffect(() => {
     if (!pokemonName) {
@@ -21,31 +29,31 @@ function PokemonInfo({pokemonName}) {
     applyPokeData()
 
     async function applyPokeData() {
-      setPokemon(null)
-      setError(null)
+      setStatus(statusEnum.pending)
       try {
         const data = await fetchPokemon(pokemonName)
         setPokemon(data)
+        setStatus(statusEnum.resolved)
       } catch (error) {
         setError(error)
+        setStatus(statusEnum.rejected)
       }
     }
   }, [pokemonName])
 
-  if (!!error) {
-    return (
-      <div role="alert">
-        There was an error:
-        <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
-      </div>
-    )
-  }
-
   return (
     <>
-      {!pokemonName && <p>Submit a pokemon</p>}
-      {!!pokemonName && !pokemon && <PokemonInfoFallback name={pokemonName} />}
-      {!!pokemon && <PokemonDataView pokemon={pokemon} />}
+      {status === statusEnum.rejected && (
+        <div role="alert">
+          There was an error:
+          <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
+        </div>
+      )}
+      {status === statusEnum.idle && <p>Submit a pokemon</p>}
+      {status === statusEnum.pending && (
+        <PokemonInfoFallback name={pokemonName} />
+      )}
+      {status === statusEnum.resolved && <PokemonDataView pokemon={pokemon} />}
     </>
   )
 }
