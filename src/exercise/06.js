@@ -53,7 +53,7 @@ function PokemonInfo({pokemonName}) {
   }, [pokemonName])
 
   if (status === statusEnum.rejected) {
-    throw new Error(error.message)
+    throw error
   }
 
   return (
@@ -75,40 +75,39 @@ function App() {
   }
 
   return (
-    <ErrorBoundary>
-      <div className="pokemon-info-app">
-        <PokemonForm pokemonName={pokemonName} onSubmit={handleSubmit} />
-        <hr />
-        <div className="pokemon-info">
+    <div className="pokemon-info-app">
+      <PokemonForm pokemonName={pokemonName} onSubmit={handleSubmit} />
+      <hr />
+      <div className="pokemon-info">
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
           <PokemonInfo pokemonName={pokemonName} />
-        </div>
+        </ErrorBoundary>
       </div>
-    </ErrorBoundary>
+    </div>
   )
 }
 
 export default App
 
+function ErrorFallback({error}) {
+  return (
+    <div role="alert">
+      There was an error:{' '}
+      <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
+    </div>
+  )
+}
 class ErrorBoundary extends React.Component {
-  state = {
-    hasError: false,
-    errorInfo: null,
+  state = {error: null}
+  static getDerivedStateFromError(error) {
+    return {error}
   }
-
-  componentDidCatch(error) {
-    this.setState({hasError: true, errorInfo: error.message})
-  }
-
   render() {
-    const {hasError, errorInfo} = this.state
-    if (hasError) {
-      return (
-        <div role="alert">
-          There was an error:
-          <pre style={{whiteSpace: 'normal'}}>{errorInfo}</pre>
-        </div>
-      )
+    const {error} = this.state
+    if (error) {
+      return <this.props.FallbackComponent error={error} />
     }
+
     return this.props.children
   }
 }
