@@ -17,14 +17,12 @@ const statusEnum = {
   rejected: 'rejected',
 }
 
-const initialState = {
-  pokemon: null,
-  error: null,
-  status: statusEnum.idle,
-}
-
 function PokemonInfo({pokemonName}) {
-  const [pokemonState, setPokemonState] = React.useState(initialState)
+  const [pokemonState, setPokemonState] = React.useState({
+    pokemon: null,
+    error: null,
+    status: pokemonName ? statusEnum.pending : statusEnum.idle,
+  })
   const {status, error, pokemon} = pokemonState
 
   React.useEffect(() => {
@@ -84,7 +82,11 @@ function App() {
       <PokemonForm pokemonName={pokemonName} onSubmit={handleSubmit} />
       <hr />
       <div className="pokemon-info">
-        <ErrorBoundary FallbackComponent={ErrorFallback} onReset={handleReset}>
+        <ErrorBoundary
+          FallbackComponent={ErrorFallback}
+          resetKeys={[pokemonName]}
+          onReset={handleReset}
+        >
           <PokemonInfo pokemonName={pokemonName} />
         </ErrorBoundary>
       </div>
