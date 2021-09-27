@@ -52,14 +52,12 @@ function PokemonInfo({pokemonName}) {
     }
   }, [pokemonName])
 
+  if (status === statusEnum.rejected) {
+    throw new Error(error.message)
+  }
+
   return (
     <>
-      {status === statusEnum.rejected && (
-        <div role="alert">
-          There was an error:
-          <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
-        </div>
-      )}
       {status === statusEnum.idle && <p>Submit a pokemon</p>}
       {status === statusEnum.pending && (
         <PokemonInfoFallback name={pokemonName} />
@@ -77,14 +75,40 @@ function App() {
   }
 
   return (
-    <div className="pokemon-info-app">
-      <PokemonForm pokemonName={pokemonName} onSubmit={handleSubmit} />
-      <hr />
-      <div className="pokemon-info">
-        <PokemonInfo pokemonName={pokemonName} />
+    <ErrorBoundary>
+      <div className="pokemon-info-app">
+        <PokemonForm pokemonName={pokemonName} onSubmit={handleSubmit} />
+        <hr />
+        <div className="pokemon-info">
+          <PokemonInfo pokemonName={pokemonName} />
+        </div>
       </div>
-    </div>
+    </ErrorBoundary>
   )
 }
 
 export default App
+
+class ErrorBoundary extends React.Component {
+  state = {
+    hasError: false,
+    errorInfo: null,
+  }
+
+  componentDidCatch(error) {
+    this.setState({hasError: true, errorInfo: error.message})
+  }
+
+  render() {
+    const {hasError, errorInfo} = this.state
+    if (hasError) {
+      return (
+        <div role="alert">
+          There was an error:
+          <pre style={{whiteSpace: 'normal'}}>{errorInfo}</pre>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
